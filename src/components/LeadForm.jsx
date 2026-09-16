@@ -12,7 +12,7 @@ export function LeadForm() {
 
         <div className="leaderboard-grid">
           <div className="leaderboard-cards">
-            {rows.map(([rank, date, name, amount, value], index) => (
+            {rows.map(([rank, date, name, amount], index) => (
               <article className="leaderboard-card" key={`${rank}-${index}`}>
                 <div className="leaderboard-card__meta">
                   <div className="avatar">{rank}</div>

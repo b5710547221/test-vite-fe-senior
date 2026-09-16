@@ -1,7 +1,48 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from 'yup'
+import { countries } from './data/countries'
+
+const formSchema = yup.object({
+  firstName: yup.string().trim().required('First name is required'),
+  lastName: yup.string().trim().required('Last name is required'),
+  country: yup.string().required('Country is required'),
+  phone: yup.string().matches(/^\+\d{8,15}$/, 'Enter a valid phone number').required('Phone is required'),
+  email: yup.string().trim().email('Enter a valid email address').required('Email is required'),
+  experience: yup.string().required('Experience is required'),
+  accepted: yup.boolean().oneOf([true], 'Please accept the terms'),
+})
 
 export default function App() {
   const [openFaq, setOpenFaq] = useState(0)
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitSuccessful },
+  } = useForm({
+    resolver: yupResolver(formSchema),
+    defaultValues: { country: '', countryCode: '', phone: '', accepted: false },
+  })
+
+  const selectedCountry = watch('country')
+  const selectedCode = countries.find((country) => country.value === selectedCountry)?.code ?? ''
+  const phoneValue = watch('phone')
+  const countryField = register('country')
+
+  const onSubmit = (values) => {
+    console.log('Lead form submitted', values)
+  }
+
+  const handleCountryChange = (event) => {
+    const country = countries.find((item) => item.value === event.target.value)
+    const nationalNumber = phoneValue.replace(/^\+\d+/, '')
+    countryField.onChange(event)
+    setValue('countryCode', country?.code ?? '')
+    setValue('phone', country ? `${country.code}${nationalNumber}` : '')
+  }
 
   const faqs = [
     ['Question A', 'Answer A'],
@@ -53,71 +94,71 @@ export default function App() {
               <span>SIT AMET TOSIK</span>
             </h1>
 
-            <div className="hero-form-panel">
+            <form className="hero-form-panel" onSubmit={handleSubmit(onSubmit)} noValidate>
               <h2>Lorem ipsum dolor sit amet</h2>
 
               <div className="field-grid field-grid--two">
                 <label className="field">
                   <span>First Name</span>
-                  <input type="text" placeholder="First Name" />
+                  <input type="text" placeholder="First Name" {...register('firstName')} aria-invalid={Boolean(errors.firstName)} />
+                  {errors.firstName && <small className="field-error">{errors.firstName.message}</small>}
                 </label>
                 <label className="field">
                   <span>Last Name</span>
-                  <input type="text" placeholder="Last Name" />
+                  <input type="text" placeholder="Last Name" {...register('lastName')} aria-invalid={Boolean(errors.lastName)} />
+                  {errors.lastName && <small className="field-error">{errors.lastName.message}</small>}
                 </label>
               </div>
 
               <div className="field-grid field-grid--two">
                 <label className="field">
                   <span>Country</span>
-                  <select defaultValue="">
+                  <select defaultValue="" {...countryField} onChange={handleCountryChange} aria-invalid={Boolean(errors.country)}>
                     <option value="" disabled>Country</option>
-                    <option>Cyprus</option>
-                    <option>United Kingdom</option>
-                    <option>Germany</option>
-                    <option>Greece</option>
-                    <option>UAE</option>
+                    {countries.map((country) => <option key={country.value} value={country.value}>{country.label}</option>)}
                   </select>
+                  {errors.country && <small className="field-error">{errors.country.message}</small>}
                 </label>
                 <div className="field field--phone">
                   <span>Phone</span>
                   <div className="phone-wrap">
-                    <select defaultValue="" aria-label="Country code">
-                      <option value="" disabled>Code</option>
-                      <option>+357</option>
-                      <option>+44</option>
-                      <option>+49</option>
-                      <option>+30</option>
-                      <option>+971</option>
+                    <select value={selectedCode} aria-label="Country code" disabled>
+                      <option value="">Code</option>
+                      {countries.map((country) => <option key={country.code} value={country.code}>{country.code}</option>)}
                     </select>
-                    <input type="tel" placeholder="Phone" />
+                    <input type="tel" placeholder="Phone" {...register('phone')} aria-invalid={Boolean(errors.phone)} />
                   </div>
+                  {errors.phone && <small className="field-error">{errors.phone.message}</small>}
                 </div>
               </div>
 
               <div className="field-grid field-grid--two">
                 <label className="field">
                   <span>Email</span>
-                  <input type="email" placeholder="Email" />
+                  <input type="email" placeholder="Email" {...register('email')} aria-invalid={Boolean(errors.email)} />
+                  {errors.email && <small className="field-error">{errors.email.message}</small>}
                 </label>
                 <label className="field">
                   <span>Experience</span>
-                  <select defaultValue="">
+                  <select defaultValue="" {...register('experience')} aria-invalid={Boolean(errors.experience)}>
                     <option value="" disabled>Experience</option>
                     <option>Beginner</option>
                     <option>Intermediate</option>
                     <option>Advanced</option>
                   </select>
+                  {errors.experience && <small className="field-error">{errors.experience.message}</small>}
                 </label>
               </div>
 
               <label className="checkbox-line">
-                <input type="checkbox" />
+                <input type="checkbox" {...register('accepted')} aria-invalid={Boolean(errors.accepted)} />
                 <span>I have read and accepted the <a href="#">Privacy Policy</a> and <a href="#">Terms and Conditions</a></span>
               </label>
+              {errors.accepted && <small className="field-error checkbox-error">{errors.accepted.message}</small>}
 
-              <button type="button" className="button button--submit">Join now</button>
-            </div>
+              <button type="submit" className="button button--submit">Join now</button>
+              {isSubmitSuccessful && <p className="form-success" role="status">Thank you. Your details have been submitted.</p>}
+            </form>
           </div>
         </section>
 
@@ -254,6 +295,7 @@ export default function App() {
                     <tr><td>John Smith</td><td>61.74%</td></tr>
                   </tbody>
                 </table>
+                <p className="leader-table-footnote">Nam quam nunc, blandit vel, luctus pulvinar</p>
               </div>
             </div>
 
